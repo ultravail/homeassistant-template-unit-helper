@@ -1,6 +1,7 @@
 {
   "domain": "template_unit_helper",
   "name": "Template Unit Helper",
+  "version": "0.0.3",
   "codeowners": [
     "@ultravail"
   ],
