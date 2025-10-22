@@ -18,7 +18,7 @@ Supports:
 - **numeric or string values** (`12`, `"5 kg"`)
 - **2-element arrays** `[value, unit]`
 
-The `with_unit` helper returns a [Pint Quantity](https://pint.readthedocs.io/en/stable/api/base.html#pint.Quantity). The helpers `to_unit` and `from_unit` return plain numbers.
+The `with_unit` helper returns a [Pint Quantity](https://pint.readthedocs.io/en/stable/api/base.html#pint.Quantity). The helpers `to_unit` and `from_unit` return plain numbers. The helper `without_unit` returns the value in the current unit.
 
 ### Examples
 
@@ -43,7 +43,7 @@ The `with_unit` helper returns a [Pint Quantity](https://pint.readthedocs.io/en/
 {{ to_unit([states.sensor.temperature.state, '°C'], 'K') }}
 
 # Create quantity objects
-# with_unit(expr, default_unit=None)
+# with_unit(expr, target_unit=None)
 {{ with_unit(states.sensor.temperature) }}
 {{ with_unit([5, 'kg']) | to_unit('g') == 5000 }}
 {{ with_unit('12 m') == '12 m' }}

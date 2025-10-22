@@ -76,7 +76,7 @@ def without_unit(hass: HomeAssistant, expr):
     return value
 
 
-def with_unit(hass: HomeAssistant, expr, default_unit: str | None = None):
+def with_unit(hass: HomeAssistant, expr, unit: str | None = None):
     """Return a Pint Quantity object.
 
     Supports:
@@ -85,15 +85,16 @@ def with_unit(hass: HomeAssistant, expr, default_unit: str | None = None):
     - 2-element arrays [value, unit]
     """
     value = None
-    unit = None
+    value_unit = None
 
     # Check for 2-element array - [value, unit]
     if isinstance(expr, (list, tuple)) and len(expr) == 2:
-        value, unit = expr
+        value, value_unit = expr
         expr = value
 
     if isinstance(expr, Q_):
-        return expr
+        value = expr.magnitude
+        value_unit = str(expr.u)
 
     if isinstance(expr, str):
         if expr.startswith("states."):
@@ -105,24 +106,19 @@ def with_unit(hass: HomeAssistant, expr, default_unit: str | None = None):
     # Check for TemplateState
     if isinstance(expr, TemplateState):
         value_unit = expr.attributes.get("unit_of_measurement")
-        if unit is not None and value_unit is not None and unit != value_unit:
-            value = to_unit(hass, expr.state, unit, value_unit)
-        else:
-            # No unit specified
-            value = expr.state
-            unit = value_unit
+        value = expr.state
     else:
         value = expr
+
+    if unit is None:
+        unit = value_unit
+
+    if unit is not None and value_unit is not None and unit != value_unit:
+        value = to_unit(hass, value, unit, value_unit)
 
     if unit is not None:
         try:
             return Q_(float(str(value)), unit)
-        except Exception:  # noqa: BLE001
-            # value is not a string - ignore
-            pass
-    if default_unit is not None:
-        try:
-            return Q_(float(str(value)), default_unit)
         except Exception:  # noqa: BLE001
             # value is not a string - ignore
             pass
