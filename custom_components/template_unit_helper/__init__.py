@@ -75,14 +75,14 @@ def init(*args):
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Initialize filters."""
-    config = hass_config["unit_helper"]  # noqa: F841
+    config = hass_config.get("template_unit_helper", None)  # noqa: F841
     tpl = template.Template("", hass)
 
     for f in custom_filters:
         add_custom_filter_function(f, tpl._env)  # noqa: SLF001
 
     # in configuration.yaml
-    # custom_filters:
+    # template_unit_helper:
     #   custom_date_format: "%b %-d %Y, %-I:%M:%S %p"
     # if config["custom_date_format"]:
     #    add_custom_filter_function(get_format_date_function(config["custom_date_format"]), tpl._env, template._NO_HASS_ENV)
