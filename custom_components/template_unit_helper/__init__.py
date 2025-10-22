@@ -14,7 +14,12 @@ _TemplateEnvironment = template.TemplateEnvironment
 # Validation of the user's configuration
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend({})
 
-custom_filters = [helpers.from_unit, helpers.to_unit, helpers.with_unit]
+custom_filters = [
+    helpers.from_unit,
+    helpers.to_unit,
+    helpers.with_unit,
+    helpers.without_unit,
+]
 
 """
 async def async_setup(hass: HomeAssistant, config):
@@ -47,8 +52,15 @@ def add_custom_filter_function(custom_filter, *environments):
     function = (
         custom_filter["function"] if isinstance(custom_filter, dict) else custom_filter
     )
+
+    def _make_wrapper(func, env):
+        def _wrapper(*args, **kwargs):
+            return func(env.hass, *args, **kwargs)
+
+        return _wrapper
+
     for env in environments:
-        env.globals[name] = env.filters[name] = function
+        env.globals[name] = env.filters[name] = _make_wrapper(function, env)
 
 
 def init(*args):
@@ -63,7 +75,7 @@ def init(*args):
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Initialize filters."""
-    config = hass_config["custom_filters"]  # noqa: F841
+    config = hass_config["unit_helper"]  # noqa: F841
     tpl = template.Template("", hass)
 
     for f in custom_filters:

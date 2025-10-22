@@ -7,18 +7,29 @@ numeric values, and [value, unit] arrays.
 
 import pint
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.template import TemplateState
 
 ureg = pint.UnitRegistry()
 Q_ = ureg.Quantity
 
 
-def from_unit(expr, source_unit: str | None = None, target_unit: str | None = None):
+def from_unit(
+    hass: HomeAssistant,
+    expr,
+    source_unit: str | None = None,
+    target_unit: str | None = None,
+):
     """Convert numeric value between units."""
-    return to_unit(expr, target_unit, source_unit)
+    return to_unit(hass, expr, target_unit, source_unit)
 
 
-def to_unit(expr, target_unit: str | None = None, source_unit: str | None = None):
+def to_unit(
+    hass: HomeAssistant,
+    expr,
+    target_unit: str | None = None,
+    source_unit: str | None = None,
+):
     """Convert a value to a target unit."""
 
     if source_unit is None or source_unit == "":
@@ -26,16 +37,46 @@ def to_unit(expr, target_unit: str | None = None, source_unit: str | None = None
     if target_unit is None or target_unit == "":
         target_unit = source_unit
 
-    q = with_unit(expr, source_unit)
+    q = with_unit(hass, expr, source_unit)
+    ex = None
     try:
         return q.to(target_unit).magnitude
-    except Exception as e:
-        raise ValueError(
-            f"Conversion failed with expr={q:~#P}, target_unit={target_unit!r}: {e}"
-        ) from e
+    except Exception as e:  # noqa: BLE001
+        ex = e
+        if str(q.u).startswith("delta_"):
+            try:
+                # Try to add zero delta value to transform to "normal" unit
+                return (
+                    with_unit(hass, q + with_unit(hass, 0, str(q.u)[6:]))
+                    .to(target_unit)
+                    .magnitude
+                )
+            except Exception:  # noqa: BLE001
+                pass
+
+    raise ValueError(
+        f"Conversion failed with expr={q:~#P}, target_unit={target_unit!r}: {ex}"
+    ) from ex
 
 
-def with_unit(expr, default_unit: str | None = None):
+def without_unit(hass: HomeAssistant, expr):
+    """Return the raw number without any conversion."""
+    if isinstance(expr, (list, tuple)) and len(expr) == 2:
+        value, _ = expr
+    else:
+        value = expr
+    if isinstance(value, Q_):
+        return value.magnitude
+    if isinstance(value, TemplateState):
+        return value.state
+    try:
+        return float(str(value))
+    except Exception:  # noqa: BLE001
+        pass
+    return value
+
+
+def with_unit(hass: HomeAssistant, expr, default_unit: str | None = None):
     """Return a Pint Quantity object.
 
     Supports:
@@ -51,11 +92,25 @@ def with_unit(expr, default_unit: str | None = None):
         value, unit = expr
         expr = value
 
+    if isinstance(expr, Q_):
+        return expr
+
+    if isinstance(expr, str):
+        if expr.startswith("states."):
+            state = hass.states.get(expr[7:])
+            if state is None:
+                raise ValueError(f"State {expr} not found")
+            expr = TemplateState(hass, state)
+
     # Check for TemplateState
     if isinstance(expr, TemplateState):
-        value = expr.state
-        if unit is None:
-            unit = expr.attributes.get("unit_of_measurement")
+        value_unit = expr.attributes.get("unit_of_measurement")
+        if unit is not None and value_unit is not None and unit != value_unit:
+            value = to_unit(hass, expr.state, unit, value_unit)
+        else:
+            # No unit specified
+            value = expr.state
+            unit = value_unit
     else:
         value = expr
 
