@@ -1,0 +1,6 @@
+{
+  "name": "Template Unit Helper",
+  "content_in_root": false,
+  "domains": ["template_unit_helper"],
+  "homeassistant": "2024.1.0"
+}
