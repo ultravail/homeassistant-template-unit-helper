@@ -1,60 +1,84 @@
+"""Helpers for unit conversion and quantity handling using Pint.
+
+This module provides functions to convert values between units and to
+create Pint Quantity objects, supporting Home Assistant TemplateState,
+numeric values, and [value, unit] arrays.
+"""
+
 import pint
+
 from homeassistant.helpers.template import TemplateState
 
 ureg = pint.UnitRegistry()
 Q_ = ureg.Quantity
 
-def to_unit(value, target_unit: str):
+
+def from_unit(expr, source_unit: str | None = None, target_unit: str | None = None):
+    """Convert numeric value between units."""
+    return to_unit(expr, target_unit, source_unit)
+
+
+def to_unit(expr, target_unit: str | None = None, source_unit: str | None = None):
     """Convert a value to a target unit."""
 
-    q = quantity(value)
-    if q is None:
-        return None
-    else:
-        return q.to(target_unit).magnitude
+    if source_unit is None or source_unit == "":
+        source_unit = target_unit
+    if target_unit is None or target_unit == "":
+        target_unit = source_unit
 
-def quantity(value):
+    q = with_unit(expr, source_unit)
+    try:
+        return q.to(target_unit).magnitude
+    except Exception as e:
+        raise ValueError(
+            f"Conversion failed with expr={q:~#P}, target_unit={target_unit!r}: {e}"
+        ) from e
+
+
+def with_unit(expr, default_unit: str | None = None):
     """Return a Pint Quantity object.
+
     Supports:
     - numeric or string values
     - TemplateState objects (states.sensor.xxx)
-    - 2-element arrays [value, unit]    
+    - 2-element arrays [value, unit]
     """
+    value = None
+    unit = None
 
-    # 2-element array
-    if isinstance(value, (list, tuple)) and len(value) == 2:
-        val, unit = value
-        try:
-            return Q_(float(val), unit)
-        except Exception as e:
-            raise ValueError(f"quantity failed with value={val!r}, unit={unit!r}: {e}")
+    # Check for 2-element array - [value, unit]
+    if isinstance(expr, (list, tuple)) and len(expr) == 2:
+        value, unit = expr
+        expr = value
 
-    # TemplateState
-    if isinstance(value, TemplateState):
-        val = value.state
-        unit = value.attributes.get("unit_of_measurement")
+    # Check for TemplateState
+    if isinstance(expr, TemplateState):
+        value = expr.state
         if unit is None:
-            # Overwrite value and fail over to the last (single value) resort
-            value = val
-        else:
-            try:
-                return Q_(float(val), unit)
-            except Exception as e:
-                raise ValueError(f"quantity failed with value={val!r}, unit={unit!r}: {e}")
+            unit = expr.attributes.get("unit_of_measurement")
+    else:
+        value = expr
 
-    # Single value
-    try:
-        return Q_(float(value))
-    except Exception:
+    if unit is not None:
         try:
-            return Q_(value)
-        except Exception as e:
-            raise ValueError(f"Cannot parse value={value!r}: {e}")
-
-def convert(value, from_unit: str, to_unit: str):
-    """Convert numeric value between units."""
+            return Q_(float(str(value)), unit)
+        except Exception:  # noqa: BLE001
+            # value is not a string - ignore
+            pass
+    if default_unit is not None:
+        try:
+            return Q_(float(str(value)), default_unit)
+        except Exception:  # noqa: BLE001
+            # value is not a string - ignore
+            pass
     try:
-        q = Q_(float(value), from_unit)
-        return q.to(to_unit).magnitude
-    except Exception:
-        return None
+        return Q_(str(value))
+    except (
+        ValueError,
+        TypeError,
+        pint.UndefinedUnitError,
+        pint.DimensionalityError,
+    ) as err:
+        raise ValueError(
+            f"with_unit failed with value={value!r}, unit={unit!r}, default_unit={default_unit!r}: {err}"
+        ) from err

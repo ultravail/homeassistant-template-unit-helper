@@ -1,9 +1,15 @@
 {
   "domain": "template_unit_helper",
   "name": "Template Unit Helper",
-  "version": "2.0.0",
+  "codeowners": [
+    "@ultravail"
+  ],
+  "config_flow": false,
   "documentation": "https://github.com/ultravail/template-unit-helper",
-  "requirements": ["pint>=0.25"],
-  "codeowners": ["@ultravail"],
-  "integration_type": "helper"
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "quality_scale": "gold",
+  "requirements": [
+    "pint==0.25"
+  ]
 }
