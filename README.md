@@ -1,17 +1,26 @@
-# Template Unit Helper v2
+# Template Unit Helper
 
 A Home Assistant **HACS integration** that provides **unit conversion and quantity math** using the [Pint](https://github.com/hgrecco/pint) library.
 
-## 🧩 Installation (via HACS)
+
+## How to install
+I tested this integration with Home Assistant 2025.10.
+
+This custom template is compatible with [HACS](https://hacs.xyz/), which means that you can easily download and manage updates for it. Custom templates are available for download in HACS 2.0 and up, and on earlier versions in case experimental features are enabled. When you are on HACS 2.0 or higher or experimental features are enabled you can click the button below to add it to your HACS installation:
+[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fultravail%2Fhomeassistant-template-unit-helper)
+
+For a manual install you need to add this repository as custom repository:
+
 1. Go to **HACS → Press "⋮" on the upper right corner → Choose menu item "Custom repositories"**
 2. Add Repository:
    ```   
    https://github.com/ultravail/homeassistant-template-unit-helper.git
    ```
    with Type: **Integration**
-3. Install and restart Home Assistant.
+ 
+3. Install `Template Unit Helper` and restart Home Assistant.
 
-## ⚙️ Usage in Templates
+## Usage in Templates
 
 Supports:
 - **TemplateState objects** (`states.sensor.xxx`)
