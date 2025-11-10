@@ -4,11 +4,17 @@ A Home Assistant **HACS integration** that provides **unit conversion and quanti
 
 
 ## How to install
-I tested this integration with Home Assistant 2025.10.
+> [!NOTE]
+> I tested this integration with Home Assistant 2025.10. I have no idea if it works with older versions.
 
+> [!IMPORTANT]
+> No matter if you install via HACS or manually, you need to add the line `template_unit_helper:` to your configuration.yaml for the time being. I am working on a version that does not need this manual step anymore.
+
+### Via HACS
 This custom template is compatible with [HACS](https://hacs.xyz/), which means that you can easily download and manage updates for it. Custom templates are available for download in HACS 2.0 and up, and on earlier versions in case experimental features are enabled. When you are on HACS 2.0 or higher or experimental features are enabled you can click the button below to add it to your HACS installation:
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ultravail&repository=homeassistant-template-unit-helper&category=template)
 
+### Via HACS with custom repository
 For a manual install you need to add this repository as custom repository:
 
 1. Go to **HACS → Press "⋮" on the upper right corner → Choose menu item "Custom repositories"**
@@ -20,13 +26,26 @@ For a manual install you need to add this repository as custom repository:
  
 3. Install `Template Unit Helper` and restart Home Assistant.
 
+### Manual install
+Copy the `custom_components/template_unit_helper` of this repository to the `custom_components` directory of your HomeAssistant installation.
+
 ## Usage in Templates
 
 Supports:
 - **TemplateState objects** (`states.sensor.xxx`)
+- **Pint Quantity objects** (created with the help of `with_unit` helper)
 - **numeric or string values** (`12`, `"5 kg"`)
 - **2-element arrays** `[value, unit]`
 
+> [!CAUTION]
+> The **`states(...)`** helper is NOT supported (without explicitly providing a hard-coded unit) because this helper only returns a number without any reference to the unit or its original state. Use `with_unit` instead.
+
+> [!TIP]
+> Instead of using `states('sensor.my_sensor')` use `with_unit('states.sensor.my_sensor')` - note that you need to add the prefix `states.` to the name `sensor.my_sensor`.
+
+> [!NOTE]
+> When providing a plain number to any of the helper functions `to_unit`, `from_unit` or `without_unit`, those helpers will return that same number without any conversion. When providing a plain number to the helper `with_unit`, the unit will be `dimensionless`
+ 
 The `with_unit` helper returns a [Pint Quantity](https://pint.readthedocs.io/en/stable/api/base.html#pint.Quantity). The helpers `to_unit` and `from_unit` return plain numbers. The helper `without_unit` returns the value in the current unit.
 
 ### Examples
