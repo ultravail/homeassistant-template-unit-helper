@@ -1,11 +1,14 @@
 """Helpers and custom filters for template unit conversions in Home Assistant."""
 
 from homeassistant.components.light import PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
 from homeassistant.helpers.typing import ConfigType
 
 from . import helpers
+
+DOMAIN = "template_unit_helper"
 
 # Initialization inspired by https://github.com/zvldz/ha_custom_filters
 
@@ -73,19 +76,29 @@ def init(*args):
     return env
 
 
-async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
-    """Initialize filters."""
-    config = hass_config.get("template_unit_helper", None)  # noqa: F841
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Template Unit Helper from a config entry."""
+    # Get a template instance to access the template environment
     tpl = template.Template("", hass)
 
+    # Register all custom filters
     for f in custom_filters:
         add_custom_filter_function(f, tpl._env)  # noqa: SLF001
 
-    # in configuration.yaml
-    # template_unit_helper:
-    #   custom_date_format: "%b %-d %Y, %-I:%M:%S %p"
-    # if config["custom_date_format"]:
-    #    add_custom_filter_function(get_format_date_function(config["custom_date_format"]), tpl._env, template._NO_HASS_ENV)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    # Filters are registered globally, so we can't really unload them
+    # But we return True to indicate the entry can be removed
+    return True
+
+
+async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
+    """Set up Template Unit Helper (legacy support)."""
+    # This is kept for backward compatibility but should not be needed
+    # when using config flow
     return True
 
 

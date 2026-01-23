@@ -8,7 +8,7 @@ A Home Assistant **HACS integration** that provides **unit conversion and quanti
 > I tested this integration with Home Assistant 2025.10. I have no idea if it works with older versions.
 
 > [!IMPORTANT]
-> No matter if you install via HACS or manually, you need to add the line `template_unit_helper:` to your configuration.yaml for the time being. I am working on a version that does not need this manual step anymore.
+> After installing via HACS or manually, restart Home Assistant. Then go to **Settings → Devices & Services → Add Integration** and search for "Template Unit Helper" to complete the setup. No configuration.yaml entry is required.
 
 ### Via HACS
 This custom template is compatible with [HACS](https://hacs.xyz/), which means that you can easily download and manage updates for it. Custom templates are available for download in HACS 2.0 and up, and on earlier versions in case experimental features are enabled. When you are on HACS 2.0 or higher or experimental features are enabled you can click the button below to add it to your HACS installation:
@@ -25,9 +25,12 @@ For a manual install you need to add this repository as custom repository:
    with Type: **Integration**
  
 3. Install `Template Unit Helper` and restart Home Assistant.
+4. Go to **Settings → Devices & Services → Add Integration** and search for "Template Unit Helper" to complete the setup.
 
 ### Manual install
-Copy the `custom_components/template_unit_helper` of this repository to the `custom_components` directory of your HomeAssistant installation.
+1. Copy the `custom_components/template_unit_helper` of this repository to the `custom_components` directory of your HomeAssistant installation.
+2. Restart Home Assistant.
+3. Go to **Settings → Devices & Services → Add Integration** and search for "Template Unit Helper" to complete the setup.
 
 ## Usage in Templates
 
