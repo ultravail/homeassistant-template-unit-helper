@@ -32,7 +32,7 @@ def to_unit(
 ):
     """Convert a value to a target unit."""
 
-    q = to_quantity(expr, source_unit)
+    q = to_quantity(hass, expr, source_unit)
     if target_unit is None:
         return q
     
@@ -45,7 +45,7 @@ def to_unit(
             try:
                 # Try to add zero delta value to transform to "normal" unit
                 return (
-                    (q + to_quantity(0, str(q.u)[6:]))
+                    (q + to_quantity(hass, 0, str(q.u)[6:]))
                     .to(target_unit)
                     .magnitude
                 )
@@ -73,7 +73,7 @@ def without_unit(hass: HomeAssistant, expr):
     return value
 
 
-def to_quantity(value, value_unit: str | None = None):
+def to_quantity(hass, expr, target_unit: str | None = None):
     """Return a Pint Quantity object.
 
     Supports:
@@ -109,13 +109,13 @@ def to_quantity(value, value_unit: str | None = None):
         else:
             value = expr
 
+    if value_unit is not None and target_unit is not None and value_unit != target_unit:
+        raise ValueError(
+            f"Unit '{value_unit!r}' of expression does not match expected unit '{target_unit!r}'"
+        )
+
     if entity is not None:
-        if str(value_unit) != str(entity.u):
-            raise ValueError(
-                f"Given unit '{value_unit!r}' and unit of '{str(entity)!r}' differ"
-            )
         return entity
-    
     try:
         if value_unit is not None:
             return Q_(float(str(value)), value_unit)
@@ -135,4 +135,4 @@ def with_unit(hass: HomeAssistant, expr, target_unit: str | None = None):
     if target_unit is not None:
         return to_unit(hass, expr, target_unit)
     else:
-        return to_quantity(expr)
+        return to_quantity(hass, expr)
