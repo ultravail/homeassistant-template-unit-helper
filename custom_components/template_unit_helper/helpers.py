@@ -72,6 +72,12 @@ def without_unit(hass: HomeAssistant, expr):
         pass
     return value
 
+def try_float(s):
+    try:
+        return float(s)
+    except:
+        return s
+
 def with_unit(hass: HomeAssistant, expr, target_unit: str | None = None):
     """Return a Pint Quantity object.
 
@@ -94,7 +100,7 @@ def with_unit(hass: HomeAssistant, expr, target_unit: str | None = None):
     elif isinstance(expr, (list, tuple)) and len(expr) == 2:
         value, value_unit = expr
         try:
-            entity = Q_(value, value_unit)
+            entity = Q_(try_float(value), value_unit)
             if entity.u == NO_DIMENSION:
                 entity = None
         except err as Exception:
@@ -125,9 +131,9 @@ def with_unit(hass: HomeAssistant, expr, target_unit: str | None = None):
         # try to convert to quantity
         try:
             if value_unit is None:
-                entity = Q_(value)
+                entity = Q_(try_float(value))
             else:
-                entity = Q_(value, value_unit)
+                entity = Q_(try_float(value), value_unit)
             if entity.u == NO_DIMENSION:
                 entity = None
         except:
@@ -164,7 +170,7 @@ def with_unit(hass: HomeAssistant, expr, target_unit: str | None = None):
     # we have to deal with `value` being a number and `target_unit`
     # being the unit
     try:
-        return Q_(value, value_unit)
+        return Q_(try_float(value), value_unit)
     except (
         ValueError,
         TypeError,
