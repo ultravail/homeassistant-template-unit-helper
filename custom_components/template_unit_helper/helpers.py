@@ -32,12 +32,10 @@ def to_unit(
 ):
     """Convert a value to a target unit."""
 
-    if source_unit is None or source_unit == "":
-        source_unit = target_unit
-    if target_unit is None or target_unit == "":
-        target_unit = source_unit
-
-    q = with_unit(hass, expr, source_unit)
+    q = to_quantity(expr, source_unit)
+    if target_unit is None:
+        return q
+    
     ex = None
     try:
         return q.to(target_unit).magnitude
@@ -47,13 +45,12 @@ def to_unit(
             try:
                 # Try to add zero delta value to transform to "normal" unit
                 return (
-                    with_unit(hass, q + with_unit(hass, 0, str(q.u)[6:]))
+                    (q + to_quantity(0, str(q.u)[6:]))
                     .to(target_unit)
                     .magnitude
                 )
             except Exception:  # noqa: BLE001
                 pass
-
     raise ValueError(
         f"Conversion failed with expr={q:~#P}, target_unit={target_unit!r}: {ex}"
     ) from ex
@@ -76,7 +73,7 @@ def without_unit(hass: HomeAssistant, expr):
     return value
 
 
-def with_unit(hass: HomeAssistant, expr, target_unit: str | None = None):
+def to_quantity(value, value_unit: str | None = None):
     """Return a Pint Quantity object.
 
     Supports:
@@ -86,44 +83,44 @@ def with_unit(hass: HomeAssistant, expr, target_unit: str | None = None):
     """
     value = None
     value_unit = None
+    entity = None
 
-    # Check for 2-element array - [value, unit]
-    if isinstance(expr, (list, tuple)) and len(expr) == 2:
-        value, value_unit = expr
-        expr = value
-
+    # if expression is a quantity object itself
+    # then simply return it
     if isinstance(expr, Q_):
-        value = expr.magnitude
-        value_unit = str(expr.u)
-
-    if isinstance(expr, str):
-        if expr.startswith("states."):
+        entity = expr
+        value = entity.magnitude
+        value_unit = str(entity.u)
+    # Check for 2-element array - [value, unit]
+    elif isinstance(expr, (list, tuple)) and len(expr) == 2:
+        value, value_unit = expr
+    else:
+        # If expression is text, then check
+        # if the text is a state name
+        if isinstance(expr, str) and expr.startswith("states."):
             state = hass.states.get(expr[7:])
             if state is None:
                 raise ValueError(f"State {expr} not found")
             expr = TemplateState(hass, state)
+        # Check for TemplateState
+        if isinstance(expr, TemplateState):
+            value_unit = expr.attributes.get("unit_of_measurement")
+            value = expr.state
+        else:
+            value = expr
 
-    # Check for TemplateState
-    if isinstance(expr, TemplateState):
-        value_unit = expr.attributes.get("unit_of_measurement")
-        value = expr.state
-    else:
-        value = expr
-
-    if target_unit is None:
-        target_unit = value_unit
-
-    if target_unit is not None and value_unit is not None and target_unit != value_unit:
-        value = to_unit(hass, value, target_unit, value_unit)
-
-    if target_unit is not None:
-        try:
-            return Q_(float(str(value)), target_unit)
-        except Exception:  # noqa: BLE001
-            # value is not a string - ignore
-            pass
+    if entity is not None:
+        if str(value_unit) != str(entity.u):
+            raise ValueError(
+                f"Given unit '{value_unit!r}' and unit of '{str(entity)!r}' differ"
+            )
+        return entity
+    
     try:
-        return Q_(str(value))
+        if value_unit is not None:
+            return Q_(float(str(value)), value_unit)
+        else:
+            return Q_(str(value))
     except (
         ValueError,
         TypeError,
@@ -131,5 +128,11 @@ def with_unit(hass: HomeAssistant, expr, target_unit: str | None = None):
         pint.DimensionalityError,
     ) as err:
         raise ValueError(
-            f"with_unit failed with value={value!r}, value_unit={value_unit!r}, target_unit={target_unit!r}: {err}"
+            f"Cannot convert expression '{value!r}' and unit '{value_unit!r}' to quantity: : {err}"
         ) from err
+
+def with_unit(hass: HomeAssistant, expr, target_unit: str | None = None):
+    if target_unit is not None:
+        return to_unit(hass, expr, target_unit)
+    else:
+        return to_quantity(expr)
