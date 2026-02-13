@@ -12,5 +12,5 @@
   "requirements": [
     "pint==0.25"
   ],
-  "version": "0.0.7"
+  "version": "0.0.8"
 }
