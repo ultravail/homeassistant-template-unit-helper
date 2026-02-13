@@ -112,7 +112,9 @@ def to_quantity(hass, expr, target_unit: str | None = None):
         else:
             value = expr
 
-    if value_unit is not None and target_unit is not None and value_unit != target_unit:
+    if value_unit is None:
+        value_unit = target_unit
+    elif target_unit is not None and value_unit != target_unit:
         raise ValueError(
             f"Unit '{value_unit!r}' of expression does not match expected unit '{target_unit!r}'"
         )
