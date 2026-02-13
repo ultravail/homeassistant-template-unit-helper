@@ -12,7 +12,7 @@ from homeassistant.helpers.template import TemplateState
 
 ureg = pint.UnitRegistry()
 Q_ = ureg.Quantity
-
+NO_DIMENSION = ureg.Unit('dimensionless')
 
 def from_unit(
     hass: HomeAssistant,
@@ -75,7 +75,6 @@ def without_unit(hass: HomeAssistant, expr):
         pass
     return value
 
-
 def to_quantity(hass, expr, target_unit: str | None = None):
     """Return a Pint Quantity object.
 
@@ -97,14 +96,24 @@ def to_quantity(hass, expr, target_unit: str | None = None):
     # Check for 2-element array - [value, unit]
     elif isinstance(expr, (list, tuple)) and len(expr) == 2:
         value, value_unit = expr
+        try:
+            entity = Q_(value, value_unit)
+            if entity.u == NO_DIMENSION:
+                entity = None
+        except err as Exception:
+            raise ValueError(
+                f"Cannot convert expression '{value!r}' and unit '{value_unit!r}' to quantity: : {err}"
+            ) from err
+
     else:
         # If expression is text, then check
         # if the text is a state name
-        if isinstance(expr, str) and expr.startswith("states."):
-            state = hass.states.get(expr[7:])
-            if state is None:
-                raise ValueError(f"State {expr} not found")
-            expr = TemplateState(hass, state)
+        if isinstance(expr, str):
+            if expr.startswith("states."):
+                state = hass.states.get(expr[7:])
+                if state is None:
+                    raise ValueError(f"State {expr} not found")
+                expr = TemplateState(hass, state)
         # Check for TemplateState
         if isinstance(expr, TemplateState):
             value_unit = expr.attributes.get("unit_of_measurement")
@@ -112,20 +121,53 @@ def to_quantity(hass, expr, target_unit: str | None = None):
         else:
             value = expr
 
-    if value_unit is None:
-        value_unit = target_unit
-    elif target_unit is not None and value_unit != target_unit:
-        raise ValueError(
-            f"Unit '{value_unit!r}' of expression does not match expected unit '{target_unit!r}'"
-        )
+    # End of parsing `expr` - from here onwards we
+    # deal with `value`, optional `value_unit` and optional `entity`
+
+    if entity is None:
+        # try to convert to quantity
+        try:
+            if value_unit is None:
+                entity = Q_(value)
+            else:
+                entity = Q_(value, value_unit)
+            if entity.u == NO_DIMENSION:
+                entity = None
+        except:
+            entity = None            
+        if entity is not None:
+            value_unit = str(entity.u)
+            value = entity.magnitude
+        elif target_unit is None:
+            raise ValueError(
+                f"Cannot convert '{expr!r}' without a unit"
+            )
+        else:
+            value_unit = target_unit
+
+    if value_unit is not None and target_unit is not None:
+        try:
+            u1 = pint.Unit(value_unit)
+        except:
+            raise ValueError(f"Unknown unit {value_unit!r}")
+        try:        
+            u2 = pint.Unit(target_unit)
+        except:
+            raise ValueError(f"Unknown unit {target_unit!r}")
+
+        if u1 != u2:
+            raise ValueError(
+                f"Unit '{value_unit!r}' of expression does not match expected unit '{target_unit!r}'"
+            )
 
     if entity is not None:
         return entity
+
+    # once this point is reached we can safely assume that
+    # we have to deal with `value` being a number and `target_unit`
+    # being the unit
     try:
-        if value_unit is not None:
-            return Q_(float(str(value)), value_unit)
-        else:
-            return Q_(str(value))
+        return Q_(value, value_unit)
     except (
         ValueError,
         TypeError,
