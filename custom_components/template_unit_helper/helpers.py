@@ -32,8 +32,11 @@ def to_unit(
 ):
     """Convert a value to a target unit."""
 
+    if source_unit is None:
+        source_unit = target_unit
+        
     q = to_quantity(hass, expr, source_unit)
-    if target_unit is None:
+    if target_unit is None or target_unit == source_unit:
         return q
     
     ex = None
@@ -133,6 +136,6 @@ def to_quantity(hass, expr, target_unit: str | None = None):
 
 def with_unit(hass: HomeAssistant, expr, target_unit: str | None = None):
     if target_unit is not None:
-        return to_unit(hass, expr, target_unit)
+        return to_unit(hass=hass, expr=expr, target_unit=target_unit)
     else:
         return to_quantity(hass, expr)
