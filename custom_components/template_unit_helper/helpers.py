@@ -76,7 +76,7 @@ def without_unit(hass: HomeAssistant, expr):
     return value
 
 
-def with_unit(hass: HomeAssistant, expr, unit: str | None = None):
+def with_unit(hass: HomeAssistant, expr, target_unit: str | None = None):
     """Return a Pint Quantity object.
 
     Supports:
@@ -110,15 +110,15 @@ def with_unit(hass: HomeAssistant, expr, unit: str | None = None):
     else:
         value = expr
 
-    if unit is None:
-        unit = value_unit
+    if target_unit is None:
+        target_unit = value_unit
 
-    if unit is not None and value_unit is not None and unit != value_unit:
-        value = to_unit(hass, value, unit, value_unit)
+    if target_unit is not None and value_unit is not None and target_unit != value_unit:
+        value = to_unit(hass, value, target_unit, value_unit)
 
-    if unit is not None:
+    if target_unit is not None:
         try:
-            return Q_(float(str(value)), unit)
+            return Q_(float(str(value)), target_unit)
         except Exception:  # noqa: BLE001
             # value is not a string - ignore
             pass
@@ -131,5 +131,5 @@ def with_unit(hass: HomeAssistant, expr, unit: str | None = None):
         pint.DimensionalityError,
     ) as err:
         raise ValueError(
-            f"with_unit failed with value={value!r}, unit={unit!r}, default_unit={default_unit!r}: {err}"
+            f"with_unit failed with value={value!r}, value_unit={value_unit!r}, target_unit={target_unit!r}: {err}"
         ) from err
