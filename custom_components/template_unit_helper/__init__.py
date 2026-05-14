@@ -105,8 +105,6 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 def main():
     """Executed during loading of integration."""
     template.TemplateEnvironment = init
-    for f in custom_filters:
-        add_custom_filter_function(f, template._NO_HASS_ENV)  # noqa: SLF001
 
 
 main()
