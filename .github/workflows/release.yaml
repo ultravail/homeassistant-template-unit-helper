@@ -1,0 +1,54 @@
+name: "Release"
+
+on:
+  push:
+    branches:
+      - "beta"
+      - "alpha"
+  workflow_dispatch:
+    inputs:
+      draft:
+        type: boolean
+        description: "Draft release"
+        default: false
+      release_type:
+        type: choice
+        description: "Release type"
+        default: "auto"
+        options:
+          - "auto"
+          - "patch"
+          - "minor"
+          - "major"
+
+defaults:
+  run:
+    working-directory: custom_components/template_unit_helper
+
+jobs:
+  publish:
+    name: "Publish"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: "Checkout the repository"
+        uses: actions/checkout@v4
+
+      - name: "Setup node"
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: "Release Package 📦"
+        run: corepack enable && pnpm dlx @jcwillox/semantic-release-config
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SEMANTIC_RELEASE_GITHUB_DRAFT: ${{ inputs.draft }}
+          SEMANTIC_RELEASE_FORCE_RELEASE: ${{ inputs.release_type }}
+          SEMANTIC_RELEASE_CMD_PREPARE: |
+            yq -i '.version = "${nextRelease.version}"' manifest.json
+            zip template_unit_helper.zip -r ./
+          SEMANTIC_RELEASE_GITHUB_ASSETS: "template_unit_helper.zip"
