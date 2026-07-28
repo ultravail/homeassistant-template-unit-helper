@@ -1,90 +1,28 @@
 """Helpers and custom filters for template unit conversions in Home Assistant."""
 
+import logging
+
 from homeassistant.components.light import PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
+from homeassistant.helpers.template.extensions.base import (
+    BaseTemplateExtension,
+    TemplateFunction,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from . import helpers
 
 DOMAIN = "template_unit_helper"
 
-# Initialization inspired by https://github.com/zvldz/ha_custom_filters
-
-_TemplateEnvironment = template.TemplateEnvironment
-
 # Validation of the user's configuration
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend({})
 
-custom_filters = [
-    helpers.from_unit,
-    helpers.to_unit,
-    helpers.with_unit,
-    helpers.without_unit,
-]
-
-"""
-async def async_setup(hass: HomeAssistant, config):
-    # Register as global functions
-    # template.global_functions["to_unit"] = lambda value, target: helpers.to_unit(value, target)
-    # template.global_functions["convert"] = lambda value, from_u, to_u: helpers.convert(value, from_u, to_u)
-    # template.global_functions["quantity"] = lambda value: helpers.quantity(value)
-    template.global_functions["to_unit"] = helpers.to_unit
-    template.global_functions["convert"] = helpers.convert
-    template.global_functions["quantity"] = helpers.quantity
-
-    # Register as filters (pipe support)
-    template.Template.environment.filters["to_unit"] = helpers.to_unit
-    template.Template.environment.filters["convert"] = helpers.convert
-    template.Template.environment.filters["quantity"] = helpers.quantity
-
-    template.TemplateEnvironment.hass_filter("reverse", my_reverse_filter)
-    template.TemplateEnvironment.
-    return True
-"""
-
-
-def add_custom_filter_function(custom_filter, *environments):
-    """Add a function as global function and filter."""
-    name = (
-        custom_filter["name"]
-        if isinstance(custom_filter, dict)
-        else custom_filter.__name__
-    )
-    function = (
-        custom_filter["function"] if isinstance(custom_filter, dict) else custom_filter
-    )
-
-    def _make_wrapper(func, env):
-        def _wrapper(*args, **kwargs):
-            return func(env.hass, *args, **kwargs)
-
-        return _wrapper
-
-    for env in environments:
-        env.globals[name] = env.filters[name] = _make_wrapper(function, env)
-
-
-def init(*args):
-    """Initialize filters."""
-    env = _TemplateEnvironment(*args)
-
-    for f in custom_filters:
-        add_custom_filter_function(f, env)
-
-    return env
-
+logger = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Template Unit Helper from a config entry."""
-    # Get a template instance to access the template environment
-    tpl = template.Template("", hass)
-
-    # Register all custom filters
-    for f in custom_filters:
-        add_custom_filter_function(f, tpl._env)  # noqa: SLF001
-
     return True
 
 
@@ -97,18 +35,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up Template Unit Helper (legacy support)."""
-    # This is kept for backward compatibility but should not be needed
-    # when using config flow
+    # Depending on load order, a TemplateEnvironment may be created & cached before the hook below
+    # is executed, thus missing our extension.  Nuke the cache just in case.
+    for key in (template._ENVIRONMENT, template._ENVIRONMENT_LIMITED, template._ENVIRONMENT_STRICT):
+        if (env := hass.data.pop(key, None)) is not None:
+            logger.warning(f"removed cached TemplateEnvironment for {key}")
+            # Ensure any templates holding onto the cached env get the extension.
+            env.add_extension(helpers.UnitHelperTemplateExtension)
     return True
 
 
-def main():
-    """Executed during loading of integration."""
-    # Old - not needed anymore: template.TemplateEnvironment = init
-    # Explicitly instantiate a raw environment passing None for hass    
-    env = _TemplateEnvironment(None)
-    for f in custom_filters:
-        add_custom_filter_function(f, env)  # noqa: SLF001
+_TE = template.TemplateEnvironment
 
+class UnitHelperTemplateEnvironment(_TE):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.add_extension(helpers.UnitHelperTemplateExtension)
 
-main()
+# This needs to happen before async_setup() etc, so that the environment is hooked before
+# instances are cached in core. But also see cache management above.
+template.TemplateEnvironment = UnitHelperTemplateEnvironment
