@@ -2,6 +2,7 @@
   "name": "Template Unit Helper",
   "zip_release": false,
   "content_in_root": false,
+  "issue_tracker": "https://github.com/ultravail/homeassistant-template-unit-helper/issues",
   "filename": "template_unit_helper.zip",
   "render_readme": true,
   "homeassistant": "2024.1.0"
