@@ -5,12 +5,13 @@
     "@ultravail"
   ],
   "config_flow": false,
-  "documentation": "https://github.com/ultravail/template-unit-helper",
+  "documentation": "https://github.com/ultravail/homeassistant-template-unit-helper",
+  "issue_tracker": "https://github.com/ultravail/homeassistant-template-unit-helper/issues",
   "integration_type": "helper",
   "iot_class": "calculated",
   "quality_scale": "gold",
   "requirements": [
     "pint==0.25"
   ],
-  "version": "0.0.8"
+  "version": "0.0.0"
 }
