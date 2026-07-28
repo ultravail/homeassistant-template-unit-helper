@@ -2,6 +2,9 @@ name: Validate with hassfest
 
 on:
   push:
+    branches:
+      - "main"
+      - "feat**"  
   pull_request:
   schedule:
     - cron: "0 0 * * *"
@@ -10,5 +13,7 @@ jobs:
   validate:
     runs-on: "ubuntu-latest"
     steps:
-      - uses: "actions/checkout@v3"
-      - uses: home-assistant/actions/hassfest@master
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4"
+      - name: "Validate Hassfest"
+        uses: home-assistant/actions/hassfest@master
