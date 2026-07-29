@@ -1,3 +1,9 @@
+[![HACS Badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![License](https://img.shields.io/github/license/ultravail/homeassistant-template-unit-helper?style=for-the-badge)](https://github.com/ultravail/homeassistant-template-unit-helper/blob/main/LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/ultravail/homeassistant-template-unit-helper?style=for-the-badge)](https://github.com/ultravail/homeassistant-template-unit-helper/releases)
+[![Size](https://img.badgesize.io/https:/github.com/ultravail/homeassistant-template-unit-helper/releases/latest/download/template_unit_helper.zip?style=for-the-badge)](https://github.com/ultravail/homeassistant-template-unit-helper/releases)
+
+
 # Template Unit Helper
 
 A Home Assistant **HACS integration** that provides **unit conversion and quantity math** using the [Pint](https://github.com/hgrecco/pint) library.
