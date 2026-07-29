@@ -160,6 +160,13 @@ class UnitHelperTemplateExtension(BaseTemplateExtension):
                     if state is None:
                         raise ValueError(f"State {expr} not found")
                     expr = TemplateState(self.hass, state)
+                else:
+                    # Assume the string is a state name
+                    state = self.hass.states.get(expr)
+                    if state is None:
+                        raise ValueError(f"State states.{expr} not found")
+                    expr = TemplateState(self.hass, state)
+
             # Check for TemplateState
             if isinstance(expr, TemplateState):
                 value_unit = expr.attributes.get("unit_of_measurement")
