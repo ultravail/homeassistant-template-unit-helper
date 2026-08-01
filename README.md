@@ -30,13 +30,21 @@ For a manual install you need to add this repository as custom repository:
    ```
    with Type: **Integration**
  
-3. Install `Template Unit Helper` and restart Home Assistant.
-4. Go to **Settings → Devices & Services → Add Integration** and search for "Template Unit Helper" to complete the setup.
+3. Install `Template Unit Helper`.
+4. Edit your `configuration.yaml`, and add the following on its own line:
+   ```yaml
+   template_unit_helper:
+   ```
+5. Restart Home Assistant.
 
 ### Manual install
 1. Copy the `custom_components/template_unit_helper` of this repository to the `custom_components` directory of your HomeAssistant installation.
-2. Restart Home Assistant.
-3. Go to **Settings → Devices & Services → Add Integration** and search for "Template Unit Helper" to complete the setup.
+2. Edit your `configuration.yaml`, and add the following on its own line:
+   ```yaml
+   template_unit_helper:
+   ```
+3. Restart Home Assistant.
+
 
 ## Usage in Templates
 
