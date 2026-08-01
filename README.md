@@ -18,7 +18,7 @@ A Home Assistant **HACS integration** that provides **unit conversion and quanti
 
 ### Via HACS
 This custom template is compatible with [HACS](https://hacs.xyz/), which means that you can easily download and manage updates for it. Custom templates are available for download in HACS 2.0 and up, and on earlier versions in case experimental features are enabled. When you are on HACS 2.0 or higher or experimental features are enabled you can click the button below to add it to your HACS installation:
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ultravail&repository=homeassistant-template-unit-helper&category=template)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ultravail&repository=homeassistant-template-unit-helper&category=integration)
 
 ### Via HACS with custom repository
 For a manual install you need to add this repository as custom repository:
