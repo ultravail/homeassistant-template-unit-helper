@@ -198,35 +198,38 @@ class UnitHelperTemplateExtension(BaseTemplateExtension):
             else:
                 value_unit = target_unit
 
-        if value_unit is not None and target_unit is not None:
-            try:
-                u1 = pint.Unit(value_unit)
-            except:
-                raise ValueError(f"Unknown unit {value_unit!r}")
-            try:
-                u2 = pint.Unit(target_unit)
-            except:
-                raise ValueError(f"Unknown unit {target_unit!r}")
+        if value_unit is None:
+            value_unit = target_unit
+        if target_unit is None:
+            target_unit = value_unit
 
-            if u1 != u2:
-                raise ValueError(
-                    f"Unit '{value_unit!r}' of expression does not match expected unit '{target_unit!r}'"
-                )
-
-        if entity is not None:
-            return entity
-
-        # once this point is reached we can safely assume that
-        # we have to deal with `value` being a number and `target_unit`
-        # being the unit
         try:
-            return Q_(self.try_float(value), value_unit)
-        except (
-            ValueError,
-            TypeError,
-            pint.UndefinedUnitError,
-            pint.DimensionalityError,
-        ) as err:
-            raise ValueError(
-                f"Cannot convert expression '{value!r}' and unit '{value_unit!r}' to quantity: : {err}"
-            ) from err
+            u1 = pint.Unit(value_unit)
+        except:
+            raise ValueError(f"Unknown unit {value_unit!r}")
+
+        try:
+            u2 = pint.Unit(target_unit)
+        except:
+            raise ValueError(f"Unknown unit {target_unit!r}")
+
+        if entity is None:
+            # once this point is reached we can safely assume that
+            # we have to deal with `value` being a number and `target_unit`
+            # being the unit
+            try:
+                return Q_(self.try_float(value), value_unit)
+            except (
+                ValueError,
+                TypeError,
+                pint.UndefinedUnitError,
+                pint.DimensionalityError,
+            ) as err:
+                raise ValueError(
+                    f"Cannot convert expression '{value!r}' and unit '{value_unit!r}' to quantity: : {err}"
+                ) from err
+
+        if u1 != u2:
+            entity = entity.to(u2)
+
+        return entity
