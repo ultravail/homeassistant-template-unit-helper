@@ -72,10 +72,11 @@ class UnitHelperTemplateExtension(BaseTemplateExtension):
         expr,
         target_unit: str | None = None,
         source_unit: str | None = None,
+        default_value: float | None = None,
     ):
         """Convert a value to a target unit."""
 
-        q = self.with_unit(expr, source_unit)
+        q = self.with_unit(expr=expr, target_unit=source_unit, default_value=default_value)
         if target_unit is None or target_unit == source_unit:
             return q
 
@@ -121,7 +122,7 @@ class UnitHelperTemplateExtension(BaseTemplateExtension):
         except:
             return s
 
-    def with_unit(self, expr, target_unit: str | None = None):
+    def with_unit(self, expr, target_unit: str | None = None, default_value: float | None = None):
         """Return a Pint Quantity object.
 
         Supports:
@@ -170,7 +171,9 @@ class UnitHelperTemplateExtension(BaseTemplateExtension):
             # Check for TemplateState
             if isinstance(expr, TemplateState):
                 value_unit = expr.attributes.get("unit_of_measurement")
-                value = expr.state
+                value = self.try_float(expr.state)                
+                if default_value is not None and (value is None or isinstance(value, str)):
+                    value = default_value
             else:
                 value = expr
 

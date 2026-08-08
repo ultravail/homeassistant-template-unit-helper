@@ -50,10 +50,13 @@ Supports:
 > The **`states(...)`** helper is NOT supported (without explicitly providing a hard-coded unit) because this helper only returns a number without any reference to the unit or its original state. Use `with_unit` instead.
 
 > [!TIP]
-> Instead of using `states('sensor.my_sensor')` use `with_unit('states.sensor.my_sensor')` - note that you need to add the prefix `states.` to the name `sensor.my_sensor`.
+> Instead of using `states('sensor.my_sensor')` use `with_unit('states.sensor.my_sensor')` - note it is recommended (but not needed) to add the prefix `states.` to the name `sensor.my_sensor`.
 
 > [!NOTE]
 > When providing a plain number to any of the helper functions `to_unit`, `from_unit` or `without_unit`, those helpers will return that same number without any conversion. When providing a plain number to the helper `with_unit`, the unit will be `dimensionless`
+
+> [!TIP]
+> When using a `default_value` it is recommended to also provide a `target_unit`. In case the sensor does not have a unit (or it "lost" its unit information), the `default_value` itself is not enough. Keep in mind that you can use an arbitrary unit that is compatible to the sensor; potential unit conversions are made automatically under the hood.
  
 The `with_unit` helper returns a [Pint Quantity](https://pint.readthedocs.io/en/stable/api/base.html#pint.Quantity). The helpers `to_unit` and `from_unit` return plain numbers. The helper `without_unit` returns the value in the current unit.
 
@@ -80,8 +83,9 @@ The `with_unit` helper returns a [Pint Quantity](https://pint.readthedocs.io/en/
 {{ to_unit([states.sensor.temperature.state, '°C'], 'K') }}
 
 # Create quantity objects
-# with_unit(expr, target_unit=None)
+# with_unit(expr, target_unit=None, default_value=None)
 {{ with_unit(states.sensor.temperature) }}
+{{ with_unit(states.sensor.temperature, target_unit='°C', default_value=21) }}
 {{ with_unit([5, 'kg']) | to_unit('g') == 5000 }}
 {{ with_unit('12 m') == '12 m' }}
 
