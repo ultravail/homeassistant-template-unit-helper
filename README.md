@@ -56,7 +56,7 @@ Supports:
 > When providing a plain number to any of the helper functions `to_unit`, `from_unit` or `without_unit`, those helpers will return that same number without any conversion. When providing a plain number to the helper `with_unit`, the unit will be `dimensionless`
 
 > [!TIP]
-> When using a `default_value` it is recommended to also provide a `target_unit`. In case the sensor does not have a unit (or it "lost" its unit information), the `default_value` itself is not enough. Keep in mind that you can use an arbitrary unit that is compatible to the sensor; potential unit conversions are made automatically under the hood.
+> When using a `default_value` it is recommended to also provide a `target_unit`. In case the sensor does not have a unit (or "lost" its unit information), the `default_value` itself is not enough. Keep in mind that you can use an arbitrary unit that is compatible with the original sensor unit; potential unit conversions are made automatically under the hood.
  
 The `with_unit` helper returns a [Pint Quantity](https://pint.readthedocs.io/en/stable/api/base.html#pint.Quantity). The helpers `to_unit` and `from_unit` return plain numbers. The helper `without_unit` returns the value in the current unit.
 
