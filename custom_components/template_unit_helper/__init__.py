@@ -39,7 +39,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     # is executed, thus missing our extension.  Nuke the cache just in case.
     for key in (template._ENVIRONMENT, template._ENVIRONMENT_LIMITED, template._ENVIRONMENT_STRICT):
         if (env := hass.data.pop(key, None)) is not None:
-            logger.warning(f"removed cached TemplateEnvironment for {key}")
+            logger.info(f"removed cached TemplateEnvironment for {key}")
             # Ensure any templates holding onto the cached env get the extension.
             env.add_extension(helpers.UnitHelperTemplateExtension)
     return True
