@@ -11,5 +11,44 @@
             "cwd": "${workspaceFolder}",
             "command": "docker run --rm -v '${workspaceFolder}:/data' homeassistant/hassfest"
         },
+        {
+            "name": "pytest - All Tests",
+            "type": "debugpy",
+            "program": "${workspaceFolder}/.venv/Scripts/pytest.exe",
+            "request": "launch",
+            "args": [
+                "tests/",
+                "-v"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "pytest - All Tests (Quiet)",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests/",
+                "-q"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "pytest - Helpers Tests",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests/test_helpers.py",
+                "-v"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
     ]
 }
