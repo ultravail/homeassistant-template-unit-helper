@@ -6,6 +6,8 @@ numeric values, and [value, unit] arrays.
 """
 
 import pint
+#import asyncio
+import logging
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.template import TemplateState, TemplateEnvironment
@@ -14,9 +16,24 @@ from homeassistant.helpers.template.extensions.base import (
     TemplateFunction,
 )
 
+logger = logging.getLogger(__name__)
 ureg = pint.UnitRegistry()
 Q_ = ureg.Quantity
 NO_DIMENSION = ureg.Unit('dimensionless')
+
+def pint_unit(u):
+    return ureg.Unit(u)
+    """
+    Sometimes we get an error about async operations in Pint.
+    However, as of now I was not able to fix that issue.
+    Below code did not work at all.
+    
+    #loop = asyncio.get_event_loop()
+    #if loop is None:
+    #    return asyncio.run(pint.Unit(u))
+    #else:
+    #    return loop.run_until_complete(pint.Unit(u))
+    """
 
 class UnitHelperTemplateExtension(BaseTemplateExtension):
 
@@ -122,6 +139,7 @@ class UnitHelperTemplateExtension(BaseTemplateExtension):
         except:
             return s
 
+
     def with_unit(self, expr, target_unit: str | None = None, default_value: float | None = None):
         """Return a Pint Quantity object.
 
@@ -147,7 +165,7 @@ class UnitHelperTemplateExtension(BaseTemplateExtension):
                 entity = Q_(self.try_float(value), value_unit)
                 if entity.u == NO_DIMENSION:
                     entity = None
-            except err as Exception:
+            except Exception as err:
                 raise ValueError(
                     f"Cannot convert expression '{value!r}' and unit '{value_unit!r}' to quantity: : {err}"
                 ) from err
@@ -159,13 +177,17 @@ class UnitHelperTemplateExtension(BaseTemplateExtension):
                 if expr.startswith("states."):
                     state = self.hass.states.get(expr[7:])
                     if state is None:
-                        raise ValueError(f"State {expr} not found")
+                        #raise ValueError(f"State {expr} not found")
+                        logger.warning(f"State states.{expr} not found")
+                        return None
                     expr = TemplateState(self.hass, state)
                 else:
                     # Assume the string is a state name
                     state = self.hass.states.get(expr)
                     if state is None:
-                        raise ValueError(f"State states.{expr} not found")
+                        #raise ValueError(f"State states.{expr} not found")
+                        logger.warning(f"State states.{expr} not found")
+                        return None
                     expr = TemplateState(self.hass, state)
 
             # Check for TemplateState
@@ -207,14 +229,14 @@ class UnitHelperTemplateExtension(BaseTemplateExtension):
             target_unit = value_unit
 
         try:
-            u1 = pint.Unit(value_unit)
-        except:
-            raise ValueError(f"Unknown unit {value_unit!r}")
+            u1 = pint_unit(value_unit)
+        except Exception as e:
+            raise ValueError(f"Unknown unit {value_unit!r}: {repr(e)}")
 
         try:
-            u2 = pint.Unit(target_unit)
-        except:
-            raise ValueError(f"Unknown unit {target_unit!r}")
+            u2 = pint_unit(target_unit)
+        except Exception as e:
+            raise ValueError(f"Unknown unit {target_unit!r}: {repr(e)}")
 
         if entity is None:
             # once this point is reached we can safely assume that
