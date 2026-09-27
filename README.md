@@ -112,6 +112,42 @@ The `with_unit` helper returns a [Pint Quantity](https://pint.readthedocs.io/en/
 
 ```
 
+### Real world example
+
+Did you ever struggle with the rarely updated values of the [solar production forecast](https://www.home-assistant.io/integrations/forecast_solar/)? They are only updated every hour or if the forecast changes. I created a couple of automations based on the estimated remaining solar energy and the hourly update was too long for my purpose. 
+
+That's why I came up with a template sensor that is updated every minute. For the finer resolution I had to subtract the predicted energy that has been (supposedly) produced since the original prediciton was generated.
+
+See an example of the fine-grained value (<span style="color:blue">**blue**</span>) versus the coarse-grained original value (<span style="color:yellow;background-color:grey">**yellow**</span>) in the screenshot below.
+
+![Example chart of solar production prediction](doc/solar-production-forecast.png "Fine-grained prediction")
+
+Here's the template I am using:
+
+
+```jinja2
+{#
+   The original prediction sensor values can change at
+   any time but they predict the value for the next hour.
+
+   We want a more fine-grained value and hence we gradually
+   reduce the value of the estimated produced energy by the
+   energy that has already been produced in the "current"
+   hour. Because the sensor values can change any time, the
+   "current" hour is starting with the last change of the value.
+
+#}
+
+{% set remaining_production_today=with_unit('sensor.energy_production_today_remaining', target_unit='Wh', default_value=0) %}
+{% set age=with_unit(as_timestamp(now()) - as_timestamp(states.sensor.energy_production_today_remaining.last_updated), target_unit='seconds', default_value=0) %}
+{% set total_production_current_hour=with_unit('sensor.energy_next_hour', target_unit='Wh', default_value=0) %}
+{% set energy_produced_this_hour=total_production_current_hour * age / with_unit(1, 'hour') %}
+{% set remaining=remaining_production_today-energy_produced_this_hour  %}
+
+{{ to_unit(remaining, 'Wh') }}
+```
+
+
 ---
 
 **Author:** @ultravail  
