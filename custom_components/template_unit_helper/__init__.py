@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 logger.info(f"Template Unit Helper integration startup")
 
 from homeassistant.components.template import DOMAIN as TEMPLATE_DOMAIN
-from homeassistant.components.template import SERVICE_RELOAD as TEMPLATE_SERVICE_RELOAD
+from homeassistant.const import SERVICE_RELOAD
 
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.components.light import PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
@@ -58,11 +58,11 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         # 3. Force template entities to reload.
         # Now that the environment possesses your 'from_unit', 'to_unit' etc.,
         # this reload will instantly restore the "Not provided" UI helpers to operational status.
-        if hass.services.has_service(TEMPLATE_DOMAIN, TEMPLATE_SERVICE_RELOAD):
-            logger.info(f"Requesting {TEMPLATE_DOMAIN}.{TEMPLATE_SERVICE_RELOAD} ...")
+        if hass.services.has_service(TEMPLATE_DOMAIN, SERVICE_RELOAD):
+            logger.info(f"Requesting {TEMPLATE_DOMAIN}.{SERVICE_RELOAD} ...")
             await hass.services.async_call(
                 TEMPLATE_DOMAIN,
-                TEMPLATE_SERVICE_RELOAD,
+                SERVICE_RELOAD,
                 blocking=False
             )
         template_entries = hass.config_entries.async_entries("template")
@@ -73,7 +73,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """
     The worst-case scenario would be to reload the template component.
     As of now I think this is not necessary. Besides that, I think the async_call
-    to TEMPLATE_SERVICE_RELOAD does exactly the same as below code.
+    to SERVICE_RELOAD does exactly the same as below code.
 
     #template_component = hass.data.get(TEMPLATE_DOMAIN)
     #if template_component:
